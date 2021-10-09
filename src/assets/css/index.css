@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.btn {
+  @apply bg-green-400;
+  @apply hover:bg-green-600;
+  @apply py-2;
+  @apply px-4;
+  @apply font-bold;
+  @apply text-white;
+  @apply rounded;
+  @apply shadow-lg;
+}
+
+.custom-table > thead {
+  @apply bg-gray-50;
+}
+
+.custom-table > thead > tr > th {
+  @apply px-6;
+  @apply py-2;
+  @apply text-gray-500;
+}
+
+.custom-table > tbody {
+  @apply bg-white;
+}
+
+.custom-table > tbody > tr {
+  @apply whitespace-nowrap;
+}
+
+.custom-table > tbody > tr > td {
+  @apply px-6;
+  @apply py-4;
+  @apply text-sm;
+}

@@ -1,17 +1,27 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import "./assets/css/index.css";
+import React from "react";
+import ReactDOM from "react-dom";
+import { Home, Callback } from "./containers";
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { BrowserRouter as Router, Route } from "react-router-dom";
+import { fab } from "@fortawesome/free-brands-svg-icons";
+import { fas } from "@fortawesome/free-solid-svg-icons";
+import { far } from "@fortawesome/free-regular-svg-icons";
+
+library.add(fab, fas, far);
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+    <Router>
+      <Route exact path="/">
+        <Home />
+      </Route>
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+      <Route path="/callback">
+        <Callback />
+      </Route>
+    </Router>
+  </React.StrictMode>,
+
+  document.getElementById("root")
+);
