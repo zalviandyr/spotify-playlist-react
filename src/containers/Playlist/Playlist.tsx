@@ -1,4 +1,4 @@
-import React, { Fragment, SyntheticEvent } from "react";
+import React, { Fragment } from "react";
 import blobStream from "blob-stream";
 import ReactLoading from "react-loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -66,16 +66,13 @@ export class Playlist extends React.Component<{}, PlaylistState> {
     this.setState({ isModalCreateOpen: false });
   }
 
-  async createPlaylistSubmit(event: SyntheticEvent) {
-    event.preventDefault();
-
-    const target = event.target as any;
-    const name = target.playlistName.value;
-    const description = target.playlistDesc.value;
-
+  async createPlaylistSubmit(data: { name: string; description: string }) {
     const profileData = await axiosHelper.get("https://api.spotify.com/v1/me");
     const id = profileData.id;
-    await axiosHelper.post(`https://api.spotify.com/v1/users/${id}/playlists`, { name, description });
+    await axiosHelper.post(`https://api.spotify.com/v1/users/${id}/playlists`, {
+      name: data.name,
+      description: data.description,
+    });
 
     // refetch playlist
     this.setState({ isFetching: true });
@@ -272,7 +269,7 @@ export class Playlist extends React.Component<{}, PlaylistState> {
             <CreatePlaylistModal
               isModalCreateOpen={this.state.isModalCreateOpen}
               onClose={() => this.closeModalCreateAction()}
-              onSubmitForm={(event) => this.createPlaylistSubmit(event)}
+              onSubmitForm={(data) => this.createPlaylistSubmit(data)}
             />
           </Fragment>
         )}

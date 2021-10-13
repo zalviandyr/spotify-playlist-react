@@ -24,7 +24,7 @@
   @apply hover:bg-blue-500;
 }
 
-.spo-form > label {
+.spo-form-control > label {
   @apply block;
   @apply text-gray-700;
   @apply font-medium;
@@ -32,24 +32,35 @@
   @apply mt-3;
 }
 
-.spo-form > input {
-  @apply block;
-  @apply w-full;
-  @apply rounded-md;
-  @apply focus:border-indigo-500;
-  @apply focus:ring-indigo-500;
-  @apply border-gray-300;
-  @apply mt-1;
+.spo-form-control > small {
+  @apply text-red-500;
+  @apply text-sm;
 }
 
-.spo-form > textarea {
+.spo-form-control > input,
+.spo-form-control > textarea {
   @apply block;
   @apply w-full;
+  @apply mt-1;
   @apply rounded-md;
+  @apply text-sm;
+}
+
+.spo-form-control > input {
   @apply focus:border-indigo-500;
   @apply focus:ring-indigo-500;
   @apply border-gray-300;
-  @apply mt-1;
+}
+
+.spo-form-control > textarea {
+  @apply focus:border-indigo-500;
+  @apply focus:ring-indigo-500;
+  @apply border-gray-300;
+}
+
+.spo-form-control.error > input,
+.spo-form-control.error > textarea {
+  @apply border-red-500;
 }
 
 .spo-table > thead {
