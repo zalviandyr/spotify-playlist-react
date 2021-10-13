@@ -40,7 +40,7 @@ class PlaylistDetail extends React.Component<RouteComponentProps, PlaylistDetail
           <p className="text-left">{this.state.playlist?.name}</p>
 
           <div className="border-b border-gray-200 shadow mt-2">
-            <table className="custom-table">
+            <table className="spo-table">
               <thead>
                 <tr>
                   <th>No</th>

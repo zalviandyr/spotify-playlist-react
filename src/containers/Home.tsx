@@ -1,9 +1,8 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { generateCodeVerifier, generateCodeChallengeFromVerifier } from "../helpers/spotify-helper";
-import { BrowserRouter as Router, Route } from "react-router-dom";
 import { SessionKey } from "../constants/session-key";
-import { Playlist, PlaylistDetail } from ".";
+import { Playlist } from ".";
 
 interface HomeState {
   accessToken: string | null;
@@ -57,28 +56,20 @@ export class Home extends React.Component<{}, HomeState> {
     return (
       <div className="container mx-auto text-center py-5">
         <h1 className="text-xl">Spotify Playlist</h1>
-        <h1 className="text-lg">Export your awesome playlist</h1>
+        <h1 className="text-lg">Manage your awesome playlist</h1>
 
-        {this.state.accessToken ? (
-          <div className="mt-12">
-            <Router>
-              <Route exact path="/">
-                <Playlist />
-              </Route>
-
-              <Route exact path="/:playlistId">
-                <PlaylistDetail />
-              </Route>
-            </Router>
-          </div>
-        ) : (
-          <div className="flex justify-center mt-5">
-            <button className="btn flex items-center flex-none" onClick={this.getStartedAction}>
-              <FontAwesomeIcon icon={["fab", "spotify"]} size="2x" className="mr-2" />
-              Get Started
-            </button>
-          </div>
-        )}
+        <div className="mt-5">
+          {this.state.accessToken ? (
+            <Playlist />
+          ) : (
+            <div className="flex justify-center">
+              <button className="spo-btn flex items-center flex-none" onClick={this.getStartedAction}>
+                <FontAwesomeIcon icon={["fab", "spotify"]} size="2x" className="mr-2" />
+                Get started
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     );
   }

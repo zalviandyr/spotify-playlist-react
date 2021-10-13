@@ -2,36 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
-.btn {
-  @apply bg-green-400;
-  @apply hover:bg-green-600;
+.spo-btn {
   @apply py-2;
   @apply px-4;
+  @apply rounded-md;
+  @apply shadow-lg;
   @apply font-bold;
   @apply text-white;
-  @apply rounded;
-  @apply shadow-lg;
+  @apply bg-green-400;
+  @apply hover:bg-green-600;
 }
 
-.custom-table > thead {
+.spo-btn-secondary {
+  @apply px-4;
+  @apply py-2;
+  @apply rounded-md;
+  @apply shadow-lg;
+  @apply font-medium;
+  @apply text-white;
+  @apply bg-blue-400;
+  @apply hover:bg-blue-500;
+}
+
+.spo-form > label {
+  @apply block;
+  @apply text-gray-700;
+  @apply font-medium;
+  @apply text-sm;
+  @apply mt-3;
+}
+
+.spo-form > input {
+  @apply block;
+  @apply w-full;
+  @apply rounded-md;
+  @apply focus:border-indigo-500;
+  @apply focus:ring-indigo-500;
+  @apply border-gray-300;
+  @apply mt-1;
+}
+
+.spo-form > textarea {
+  @apply block;
+  @apply w-full;
+  @apply rounded-md;
+  @apply focus:border-indigo-500;
+  @apply focus:ring-indigo-500;
+  @apply border-gray-300;
+  @apply mt-1;
+}
+
+.spo-table > thead {
   @apply bg-gray-50;
 }
 
-.custom-table > thead > tr > th {
+.spo-table > thead > tr > th {
   @apply px-6;
   @apply py-2;
   @apply text-gray-500;
 }
 
-.custom-table > tbody {
+.spo-table > tbody {
   @apply bg-white;
 }
 
-.custom-table > tbody > tr {
+.spo-table > tbody > tr {
   @apply whitespace-nowrap;
 }
 
-.custom-table > tbody > tr > td {
+.spo-table > tbody > tr > td {
   @apply px-6;
   @apply py-4;
   @apply text-sm;

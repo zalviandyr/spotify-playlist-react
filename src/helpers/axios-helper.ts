@@ -11,20 +11,55 @@ class AxiosHelper {
   async get(url: string): Promise<any> {
     let data = null;
 
-    if (accessToken) {
-      const headers = { Authorization: `Bearer ${this.accessToken}` };
-      const expireTimestamp = sessionStorage.getItem(SessionKey.expireTimestamp);
-      const curTimestamp = Math.floor(Date.now() / 1000);
+    try {
+      if (accessToken) {
+        const headers = { Authorization: `Bearer ${this.accessToken}` };
+        const expireTimestamp = sessionStorage.getItem(SessionKey.expireTimestamp);
+        const curTimestamp = Math.floor(Date.now() / 1000);
 
-      if (curTimestamp > parseInt(expireTimestamp!)) {
-        await this.refreshToken(url);
+        if (curTimestamp > parseInt(expireTimestamp!)) {
+          await this.refreshToken(url);
+        } else {
+          const response = await axios.get(url, { headers });
+          data = response.data;
+        }
       } else {
-        const response = await axios.get(url, { headers });
+        const response = await axios.get(url);
         data = response.data;
       }
-    } else {
-      const response = await axios.get(url);
-      data = response.data;
+    } catch (err) {
+      const response = (err as any).response;
+      console.log(response.data);
+
+      // just to break the code below whosever called
+      throw new Error();
+    }
+
+    return data;
+  }
+
+  async post(url: string, body: {}): Promise<any> {
+    let data = null;
+
+    try {
+      if (accessToken) {
+        const headers = { Authorization: `Bearer ${this.accessToken}` };
+        const expireTimestamp = sessionStorage.getItem(SessionKey.expireTimestamp);
+        const curTimestamp = Math.floor(Date.now() / 1000);
+
+        if (curTimestamp > parseInt(expireTimestamp!)) {
+          await this.refreshToken(url);
+        } else {
+          const response = await axios.post(url, body, { headers });
+          data = response.data;
+        }
+      }
+    } catch (err) {
+      const response = (err as any).response;
+      console.log(response.data);
+
+      // just to break the code below whosever called
+      throw new Error();
     }
 
     return data;
