@@ -66,12 +66,13 @@ export class Playlist extends React.Component<{}, PlaylistState> {
     this.setState({ isModalCreateOpen: false });
   }
 
-  async createPlaylistSubmit(data: { name: string; description: string }) {
+  async createPlaylistSubmit(data: { name: string; description: string; isPublic: boolean }) {
     const profileData = await axiosHelper.get("https://api.spotify.com/v1/me");
     const id = profileData.id;
     await axiosHelper.post(`https://api.spotify.com/v1/users/${id}/playlists`, {
       name: data.name,
       description: data.description,
+      public: data.isPublic,
     });
 
     // refetch playlist

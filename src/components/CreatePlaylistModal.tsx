@@ -1,14 +1,16 @@
 import React, { Fragment, SyntheticEvent } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import { Dialog, Switch, Transition } from "@headlessui/react";
+import { capitalize } from "../helpers/string-helper";
 
 interface CreatePlaylistModalProps {
   isModalCreateOpen: boolean;
-  onSubmitForm: (data: { name: string; description: string }) => void;
+  onSubmitForm: (data: { name: string; description: string; isPublic: boolean }) => void;
   onClose: () => void;
 }
 
 interface CreatePlaylistModalState {
   errors: any;
+  isPublic: boolean;
 }
 
 export class CreatePlaylistModal extends React.Component<CreatePlaylistModalProps, CreatePlaylistModalState> {
@@ -17,11 +19,8 @@ export class CreatePlaylistModal extends React.Component<CreatePlaylistModalProp
 
     this.state = {
       errors: {},
+      isPublic: true,
     };
-  }
-
-  capitalize(word: string) {
-    return word[0].toUpperCase() + word.slice(1);
   }
 
   validateForm(event: SyntheticEvent) {
@@ -34,7 +33,7 @@ export class CreatePlaylistModal extends React.Component<CreatePlaylistModalProp
     fields.forEach((val) => {
       const value = target[val].value;
       if (!value) {
-        errors[val] = `${this.capitalize(val)} cannot blank, please fill that`;
+        errors[val] = `${capitalize(val)} cannot blank, please fill that`;
 
         this.setState({ errors });
       }
@@ -47,10 +46,17 @@ export class CreatePlaylistModal extends React.Component<CreatePlaylistModalProp
       const data = {
         name: target["name"].value,
         description: target["description"].value,
+        isPublic: this.state.isPublic,
       };
 
       this.props.onSubmitForm(data);
     }
+  }
+
+  publicSwitchAction() {
+    this.setState((prevState) => ({
+      isPublic: !prevState.isPublic,
+    }));
   }
 
   render() {
@@ -100,6 +106,26 @@ export class CreatePlaylistModal extends React.Component<CreatePlaylistModalProp
                     <label htmlFor="playlist-desc">Description</label>
                     <textarea id="playlist-desc" name="description" cols={30} rows={10}></textarea>
                     {this.state.errors["description"] ? <small>{this.state.errors["description"]}</small> : <></>}
+                  </div>
+
+                  <div className="spo-form-control flex justify-between">
+                    <label htmlFor="playlist-public">Is public playlist ? </label>
+
+                    <Switch
+                      as="button"
+                      checked={this.state.isPublic}
+                      onChange={() => this.publicSwitchAction()}
+                      className={`${
+                        this.state.isPublic ? "bg-blue-600" : "bg-gray-600"
+                      } relative inline-flex items-center h-6 rounded-full w-11 mt-3 transition-colors ease-in-out duration-200`}
+                    >
+                      <span className="sr-only">Enable notifications</span>
+                      <span
+                        className={`${
+                          this.state.isPublic ? "translate-x-6" : "translate-x-1"
+                        } inline-block w-4 h-4 transform bg-white rounded-full transition ease-in-out duration-200`}
+                      />
+                    </Switch>
                   </div>
 
                   <div className="mt-4 flex justify-center">
