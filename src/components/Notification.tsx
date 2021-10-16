@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { useRecoilState } from "recoil";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Transition } from "@headlessui/react";
 import { notificationAtom } from "../atoms";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export function Notification() {
   const [notificationState, setNotificationState] = useRecoilState(notificationAtom);
