@@ -1,49 +1,46 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect } from "react";
 import blobStream from "blob-stream";
 import ReactLoading from "react-loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
 import { format } from "fast-csv";
 import { PlaylistModel } from "../../models";
-import { axiosHelper } from "../../helpers/axios-helper";
+import { AxiosHelper } from "../../helpers/axios-helper";
 import { Track, TrackModel } from "../../models/TrackModel";
 import { CreatePlaylistModal } from "../../components";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { playlistAtom, notificationAtom } from "../../atoms";
 
-interface PlaylistState {
-  playlists: Array<PlaylistModel>;
-  isConvertProcess: Array<boolean>;
-  isFetching: boolean;
-  isModalCreateOpen: boolean;
-}
+export function Playlist() {
+  const setNotificationState = useSetRecoilState(notificationAtom);
+  const [playlistState, setPlaylistState] = useRecoilState(playlistAtom);
 
-export class Playlist extends React.Component<{}, PlaylistState> {
-  constructor(props: {}) {
-    super(props);
+  useEffect(() => {
+    console.log("useEffect: Playlist");
 
-    this.state = {
-      playlists: [],
-      isConvertProcess: [],
+    fetchPlaylist();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function fetchPlaylist() {
+    setPlaylistState((curVal) => ({
+      ...curVal,
       isFetching: true,
-      isModalCreateOpen: false,
-    };
-  }
+    }));
 
-  componentDidMount() {
-    this.fetchPlaylist();
-  }
-
-  async fetchPlaylist() {
     // get playlist
     try {
-      const data = await axiosHelper.get("https://api.spotify.com/v1/me/playlists");
+      const data = await AxiosHelper.get("https://api.spotify.com/v1/me/playlists");
       const playlists = PlaylistModel.fromJsonToArray(data);
 
-      this.setState({
+      setPlaylistState((curVal) => ({
+        ...curVal,
         playlists: playlists,
         // generate array base on playlist length, fill with false value
         isConvertProcess: Array.from({ length: playlists.length }, () => false),
         isFetching: false,
-      });
+      }));
     } catch (err) {
       // if get response 403 (User not register using developer mode)
       const response = (err as any).response;
@@ -58,36 +55,56 @@ export class Playlist extends React.Component<{}, PlaylistState> {
     }
   }
 
-  openModalCreateAction() {
-    this.setState({ isModalCreateOpen: true });
+  function openModalCreateAction() {
+    setPlaylistState((curVal) => ({
+      ...curVal,
+      isModalCreateOpen: true,
+    }));
   }
 
-  closeModalCreateAction() {
-    this.setState({ isModalCreateOpen: false });
+  function closeModalCreateAction() {
+    setPlaylistState((curVal) => ({
+      ...curVal,
+      isModalCreateOpen: false,
+    }));
   }
 
-  async createPlaylistSubmit(data: { name: string; description: string; isPublic: boolean }) {
-    const profileData = await axiosHelper.get("https://api.spotify.com/v1/me");
-    const id = profileData.id;
-    await axiosHelper.post(`https://api.spotify.com/v1/users/${id}/playlists`, {
-      name: data.name,
-      description: data.description,
-      public: data.isPublic,
-    });
+  async function createPlaylistSubmit(data: { name: string; description: string; isPublic: boolean }) {
+    try {
+      const profileData = await AxiosHelper.get("https://api.spotify.com/v1/me");
+      const id = profileData.id;
+      const body = new URLSearchParams();
+      body.append("name", data.name);
+      body.append("description", data.description);
+      body.append("public", data.isPublic ? "true" : "false");
+      await AxiosHelper.post(`https://api.spotify.com/v1/users/${id}/playlists`, body, true);
 
-    // refetch playlist
-    this.setState({ isFetching: true });
-    await this.fetchPlaylist();
+      // refetch playlist
+      fetchPlaylist();
+
+      setNotificationState({
+        isShow: true,
+        isError: false,
+        message: "Success to create playlist",
+      });
+    } catch (err) {
+      setNotificationState({
+        isShow: true,
+        isError: true,
+        message: "Failed to create playlist",
+      });
+    }
   }
 
-  async exportAction(playlist: PlaylistModel, index: number) {
-    this.setState((prevState) => ({
-      isConvertProcess: prevState.isConvertProcess.map((_, i) => {
+  async function exportAction(playlist: PlaylistModel, index: number) {
+    setPlaylistState((curVal) => ({
+      ...curVal,
+      isConvertProcess: curVal.isConvertProcess.map((_, i) => {
         if (i === index) {
           return true;
         } else {
           // prev status
-          return prevState.isConvertProcess[i];
+          return curVal.isConvertProcess[i];
         }
       }),
     }));
@@ -99,7 +116,7 @@ export class Playlist extends React.Component<{}, PlaylistState> {
     let urlTrack = `https://api.spotify.com/v1/playlists/${playlist.id}/tracks?offset=0&limit=100`;
     while (isNext) {
       // fetch tracks from playlist
-      const data = await axiosHelper.get(urlTrack);
+      const data = await AxiosHelper.get(urlTrack);
       const track = TrackModel.fromJson(data);
 
       // set genre
@@ -109,7 +126,7 @@ export class Playlist extends React.Component<{}, PlaylistState> {
         // get genre from artist
         for (let j = 0; j < item.artists.length; j++) {
           const artist = item.artists[j];
-          const artistData = await axiosHelper.get(`https://api.spotify.com/v1/artists/${artist.id}`);
+          const artistData = await AxiosHelper.get(`https://api.spotify.com/v1/artists/${artist.id}`);
           const genres: Array<string> = artistData["genres"];
           genresTrack.push(...genres);
         }
@@ -160,121 +177,124 @@ export class Playlist extends React.Component<{}, PlaylistState> {
     link.setAttribute("download", `${playlist.name}.csv`);
     link.click();
 
-    this.setState((prevState) => ({
-      isConvertProcess: prevState.isConvertProcess.map((_, i) => {
+    setPlaylistState((curVal) => ({
+      ...curVal,
+      isConvertProcess: curVal.isConvertProcess.map((_, i) => {
         if (i === index) {
           return false;
         } else {
           // prev status
-          return prevState.isConvertProcess[i];
+          return curVal.isConvertProcess[i];
         }
       }),
     }));
   }
 
-  render() {
-    return (
-      <div className="container flex justify-center mx-auto">
-        {this.state.isFetching ? (
-          <ReactLoading type="bars" color="#34D399" />
-        ) : (
-          <Fragment>
-            <div className="flex flex-col">
-              <div className="flex justify-center">
-                <button className="spo-btn flex items-center flex-none" onClick={() => this.openModalCreateAction()}>
-                  <FontAwesomeIcon icon={["fas", "plus"]} size="2x" className="mr-2" />
-                  Create playlist
-                </button>
-              </div>
+  return (
+    <div className="container flex justify-center mx-auto">
+      {playlistState.isFetching ? (
+        <ReactLoading type="bars" color="#34D399" />
+      ) : (
+        <Fragment>
+          <div className="grid auto-cols-max">
+            <button
+              onClick={() => {
+                // console.log(notification);
+                setNotificationState({
+                  isShow: true,
+                  isError: true,
+                  message: "Test mesage",
+                });
+                // this.setState((prevState) => ({
+                //   alert: {
+                //     isShow: !prevState.alert.isShow,
+                //     isError: true,
+                //     message: "Test mesage",
+                //   },
+                // }));
+              }}
+            >
+              Ditekan dong
+            </button>
 
-              <div className="border-b border-gray-200 shadow mt-12">
-                <table className="spo-table">
-                  <thead>
-                    <tr>
-                      <th>No</th>
-                      <th>Name</th>
-                      <th>Owner</th>
-                      <th>Track</th>
-                      <th>Collaborative</th>
-                      <th>Public</th>
-                      <th className="text-center">Edit</th>
-                      <th className="text-center">Delete</th>
-                      <th className="text-center">Export</th>
-                      <th className="text-center">Import</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {this.state.playlists.map((val, index) => (
-                      <tr key={val.id}>
-                        <td>{index + 1}</td>
-                        <td>{val.name}</td>
-                        <td>{val.owner}</td>
-                        <td>{val.tracks}</td>
-                        <td>
-                          {val.isCollaborative ? (
-                            <FontAwesomeIcon icon={["fas", "check-circle"]} color="grey" size="lg" />
-                          ) : (
-                            <span />
-                          )}
-                        </td>
-                        <td>
-                          {val.isPublic ? (
-                            <FontAwesomeIcon icon={["fas", "check-circle"]} size="lg" className="text-gray-400" />
-                          ) : (
-                            <span />
-                          )}
-                        </td>
-                        <td className="text-center">
-                          <Link to={`/${val.id}`}>
-                            <FontAwesomeIcon icon={["fas", "edit"]} size="lg" className="text-blue-400" />
-                          </Link>
-                        </td>
-                        <td className="text-center">
-                          <Link to="">
-                            <FontAwesomeIcon icon={["far", "trash-alt"]} size="lg" className="text-red-400" />
-                          </Link>
-                        </td>
-                        <td className="text-center">
-                          {this.state.isConvertProcess[index] ? (
-                            <ReactLoading
-                              type="spin"
-                              color="#34D399"
-                              height="50%"
-                              width="50%"
-                              className="inline-block"
-                            />
-                          ) : (
-                            <FontAwesomeIcon
-                              icon={["fas", "download"]}
-                              size="lg"
-                              className="text-green-400 cursor-pointer"
-                              onClick={() => this.exportAction(val, index)}
-                            />
-                          )}
-                        </td>
-
-                        <td className="text-center">
-                          <FontAwesomeIcon
-                            icon={["fas", "upload"]}
-                            size="lg"
-                            className="text-green-400 cursor-pointer"
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className="flex justify-center">
+              <button className="spo-btn flex items-center" onClick={openModalCreateAction}>
+                <FontAwesomeIcon icon={["fas", "plus"]} size="2x" className="mr-2" />
+                Create playlist
+              </button>
             </div>
 
-            <CreatePlaylistModal
-              isModalCreateOpen={this.state.isModalCreateOpen}
-              onClose={() => this.closeModalCreateAction()}
-              onSubmitForm={(data) => this.createPlaylistSubmit(data)}
-            />
-          </Fragment>
-        )}
-      </div>
-    );
-  }
+            <div className="border-b border-gray-200 shadow mt-12">
+              <table className="spo-table">
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Name</th>
+                    <th>Owner</th>
+                    <th>Track</th>
+                    <th>Collaborative</th>
+                    <th>Public</th>
+                    <th className="text-center">Edit</th>
+                    <th className="text-center">Export</th>
+                    <th className="text-center">Import</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {playlistState.playlists.map((val, index) => (
+                    <tr key={val.id}>
+                      <td>{index + 1}</td>
+                      <td>{val.name}</td>
+                      <td>{val.owner}</td>
+                      <td>{val.tracks}</td>
+                      <td>
+                        {val.isCollaborative ? (
+                          <FontAwesomeIcon icon={["fas", "check-circle"]} color="grey" size="lg" />
+                        ) : (
+                          <span />
+                        )}
+                      </td>
+                      <td>
+                        {val.isPublic ? (
+                          <FontAwesomeIcon icon={["fas", "check-circle"]} size="lg" className="text-gray-400" />
+                        ) : (
+                          <span />
+                        )}
+                      </td>
+                      <td className="text-center">
+                        <Link to={`/${val.id}`}>
+                          <FontAwesomeIcon icon={["fas", "edit"]} size="lg" className="text-blue-400" />
+                        </Link>
+                      </td>
+                      <td className="text-center">
+                        {playlistState.isConvertProcess[index] ? (
+                          <ReactLoading type="spin" color="#34D399" height="50%" width="50%" className="inline-block" />
+                        ) : (
+                          <FontAwesomeIcon
+                            icon={["fas", "download"]}
+                            size="lg"
+                            className="text-green-400 cursor-pointer"
+                            onClick={() => exportAction(val, index)}
+                          />
+                        )}
+                      </td>
+
+                      <td className="text-center">
+                        <FontAwesomeIcon icon={["fas", "upload"]} size="lg" className="text-green-400 cursor-pointer" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <CreatePlaylistModal
+            isModalCreateOpen={playlistState.isModalCreateOpen}
+            onClose={closeModalCreateAction}
+            onSubmitForm={(data) => createPlaylistSubmit(data)}
+          />
+        </Fragment>
+      )}
+    </div>
+  );
 }

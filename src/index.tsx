@@ -3,24 +3,27 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Home, Callback } from "./containers";
 import { library } from "@fortawesome/fontawesome-svg-core";
-import { BrowserRouter as Router, Route } from "react-router-dom";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import { fab } from "@fortawesome/free-brands-svg-icons";
 import { fas } from "@fortawesome/free-solid-svg-icons";
 import { far } from "@fortawesome/free-regular-svg-icons";
+import { RecoilRoot } from "recoil";
 
 library.add(fab, fas, far);
 
 ReactDOM.render(
   <React.StrictMode>
-    <Router>
-      <Route exact path="/">
-        <Home />
-      </Route>
+    <RecoilRoot>
+      <Router>
+        <Switch>
+          <Route exact path="/" component={Home} />
+        </Switch>
 
-      <Route path="/callback">
-        <Callback />
-      </Route>
-    </Router>
+        <Switch>
+          <Route path="/callback" component={Callback} />
+        </Switch>
+      </Router>
+    </RecoilRoot>
   </React.StrictMode>,
 
   document.getElementById("root")
