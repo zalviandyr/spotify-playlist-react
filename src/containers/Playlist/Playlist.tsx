@@ -1,9 +1,9 @@
-import React, { Fragment, useEffect } from "react";
+import React, { Fragment, SyntheticEvent, useEffect } from "react";
 import blobStream from "blob-stream";
 import ReactLoading from "react-loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
-import { format } from "fast-csv";
+import { format, parse } from "fast-csv";
 import { PlaylistModel } from "../../models";
 import { AxiosHelper } from "../../helpers/axios-helper";
 import { Track, TrackModel } from "../../models/TrackModel";
@@ -23,36 +23,32 @@ export function Playlist() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function fetchPlaylist() {
+  function setConvertProcessLoading(index: number, isLoading: boolean) {
     setPlaylistState((curVal) => ({
       ...curVal,
-      isFetching: true,
-    }));
-
-    // get playlist
-    try {
-      const data = await AxiosHelper.get("https://api.spotify.com/v1/me/playlists");
-      const playlists = PlaylistModel.fromJsonToArray(data);
-
-      setPlaylistState((curVal) => ({
-        ...curVal,
-        playlists: playlists,
-        // generate array base on playlist length, fill with false value
-        isConvertProcess: Array.from({ length: playlists.length }, () => false),
-        isFetching: false,
-      }));
-    } catch (err) {
-      // if get response 403 (User not register using developer mode)
-      const response = (err as any).response;
-      if (response) {
-        const status = response.status;
-        if (status === 403) {
-          sessionStorage.clear();
-
-          alert("Pastikan user sudah membuat app di developer dan client id sama");
+      isConvertProcess: curVal.isConvertProcess.map((_, i) => {
+        if (i === index) {
+          return isLoading;
+        } else {
+          // prev status
+          return curVal.isConvertProcess[i];
         }
-      }
-    }
+      }),
+    }));
+  }
+
+  function setImportProcessLoading(index: number, isLoading: boolean) {
+    setPlaylistState((curVal) => ({
+      ...curVal,
+      isImportProcess: curVal.isImportProcess.map((_, i) => {
+        if (i === index) {
+          return isLoading;
+        } else {
+          // prev status
+          return curVal.isImportProcess[i];
+        }
+      }),
+    }));
   }
 
   function openModalCreateAction() {
@@ -69,15 +65,60 @@ export function Playlist() {
     }));
   }
 
+  async function fetchPlaylist() {
+    setPlaylistState((curVal) => ({
+      ...curVal,
+      isFetching: true,
+    }));
+
+    // get playlist
+    try {
+      const data = await AxiosHelper.get("https://api.spotify.com/v1/me/playlists");
+      const playlists = PlaylistModel.fromJsonToArray(data);
+
+      if (playlistState.isConvertProcess.length === 0 || playlistState.isImportProcess.length === 0) {
+        setPlaylistState((curVal) => ({
+          ...curVal,
+          // generate array base on playlist length, fill with false value
+          isConvertProcess: Array.from({ length: playlists.length }, () => false),
+          // generate array base on playlist length, fill with false value
+          isImportProcess: Array.from({ length: playlists.length }, () => false),
+        }));
+      }
+
+      setPlaylistState((curVal) => ({
+        ...curVal,
+        playlists: playlists,
+        isFetching: false,
+      }));
+    } catch (err) {
+      // if get response 403 (User not register using developer mode)
+      const response = (err as any).response;
+      if (response) {
+        const status = response.status;
+        if (status === 403) {
+          sessionStorage.clear();
+
+          setNotificationState({
+            isShow: true,
+            isError: true,
+            message: "Make sure user already create app in Spotify Developer and re-check Client ID",
+          });
+        }
+      }
+    }
+  }
+
   async function createPlaylistSubmit(data: { name: string; description: string; isPublic: boolean }) {
     try {
       const profileData = await AxiosHelper.get("https://api.spotify.com/v1/me");
       const id = profileData.id;
-      const body = new URLSearchParams();
-      body.append("name", data.name);
-      body.append("description", data.description);
-      body.append("public", data.isPublic ? "true" : "false");
-      await AxiosHelper.post(`https://api.spotify.com/v1/users/${id}/playlists`, body, true);
+      const body = {
+        name: data.name,
+        description: data.description,
+        public: data.isPublic ? "true" : "false",
+      };
+      await AxiosHelper.post(`https://api.spotify.com/v1/users/${id}/playlists`, body);
 
       // refetch playlist
       fetchPlaylist();
@@ -97,17 +138,7 @@ export function Playlist() {
   }
 
   async function exportAction(playlist: PlaylistModel, index: number) {
-    setPlaylistState((curVal) => ({
-      ...curVal,
-      isConvertProcess: curVal.isConvertProcess.map((_, i) => {
-        if (i === index) {
-          return true;
-        } else {
-          // prev status
-          return curVal.isConvertProcess[i];
-        }
-      }),
-    }));
+    setConvertProcessLoading(index, true);
 
     // init next
     let isNext = true;
@@ -177,17 +208,66 @@ export function Playlist() {
     link.setAttribute("download", `${playlist.name}.csv`);
     link.click();
 
-    setPlaylistState((curVal) => ({
-      ...curVal,
-      isConvertProcess: curVal.isConvertProcess.map((_, i) => {
-        if (i === index) {
-          return false;
-        } else {
-          // prev status
-          return curVal.isConvertProcess[i];
-        }
-      }),
-    }));
+    setConvertProcessLoading(index, false);
+  }
+
+  function importAction(playlist: PlaylistModel, index: number, event: SyntheticEvent) {
+    const files = (event.target as any).files;
+    if (files.length > 0) {
+      setImportProcessLoading(index, true);
+
+      const file: File = files[0];
+      const reader: FileReader = new FileReader();
+      const uris: string[] = [];
+      const urisLength = uris.length;
+
+      reader.readAsText(file);
+      reader.onload = (e) => {
+        const stream = parse({ headers: true })
+          .on("error", () => {
+            setNotificationState({
+              isShow: true,
+              isError: true,
+              message: "Failed parsing to CSV",
+            });
+
+            setImportProcessLoading(index, false);
+          })
+          .on("data", (row) => uris.push(row["Uri"]))
+          .on("end", async () => {
+            try {
+              while (true) {
+                const urisOffset = uris.splice(0, 100);
+                const body = { uris: urisOffset };
+                await AxiosHelper.post(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, body);
+
+                if (uris.length === 0) {
+                  break;
+                }
+              }
+
+              setNotificationState({
+                isShow: true,
+                isError: false,
+                message: `Success import playlist, ${urisLength} tracks`,
+              });
+
+              fetchPlaylist();
+            } catch (err) {
+              setNotificationState({
+                isShow: true,
+                isError: true,
+                message: "Failed import playlist",
+              });
+            } finally {
+              setImportProcessLoading(index, false);
+            }
+          });
+
+        stream.write(reader.result);
+        stream.end();
+      };
+    }
   }
 
   return (
@@ -197,26 +277,6 @@ export function Playlist() {
       ) : (
         <Fragment>
           <div className="grid auto-cols-max">
-            <button
-              onClick={() => {
-                // console.log(notification);
-                setNotificationState({
-                  isShow: true,
-                  isError: true,
-                  message: "Test mesage",
-                });
-                // this.setState((prevState) => ({
-                //   alert: {
-                //     isShow: !prevState.alert.isShow,
-                //     isError: true,
-                //     message: "Test mesage",
-                //   },
-                // }));
-              }}
-            >
-              Ditekan dong
-            </button>
-
             <div className="flex justify-center">
               <button className="spo-btn flex items-center" onClick={openModalCreateAction}>
                 <FontAwesomeIcon icon={["fas", "plus"]} size="2x" className="mr-2" />
@@ -279,7 +339,25 @@ export function Playlist() {
                       </td>
 
                       <td className="text-center">
-                        <FontAwesomeIcon icon={["fas", "upload"]} size="lg" className="text-green-400 cursor-pointer" />
+                        {playlistState.isImportProcess[index] ? (
+                          <ReactLoading type="spin" color="#4F46E5" height="50%" width="50%" className="inline-block" />
+                        ) : (
+                          <>
+                            <label htmlFor="csvFile">
+                              <FontAwesomeIcon
+                                icon={["fas", "upload"]}
+                                size="lg"
+                                className="text-indigo-600 cursor-pointer"
+                              />
+                            </label>
+                            <input
+                              type="file"
+                              className="sr-only"
+                              id="csvFile"
+                              onChange={(event) => importAction(val, index, event)}
+                            />
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}

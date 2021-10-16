@@ -34,7 +34,7 @@ export class AxiosHelper {
     return data;
   }
 
-  static async post(url: string, body: URLSearchParams, json: boolean = false): Promise<any> {
+  static async post(url: string, body: {}): Promise<any> {
     const accessToken = sessionStorage.getItem(SessionKey.accessToken);
     let data = null;
 
@@ -47,10 +47,6 @@ export class AxiosHelper {
         if (curTimestamp > parseInt(expireTimestamp!)) {
           sessionStorage.clear();
         } else {
-          if (json) {
-            body = this.toJson(body);
-          }
-
           const response = await axios.post(url, body, { headers });
           data = response.data;
         }
