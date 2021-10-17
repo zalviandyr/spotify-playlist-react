@@ -110,27 +110,16 @@
 }
 
 .spo-pagination > .spo-pagination-nav > button {
-  @apply flex;
-  @apply flex-row;
-  @apply w-36;
-  @apply justify-between;
-  @apply items-center;
+  @apply text-lg;
+  @apply text-center;
+  @apply text-gray-700;
+  @apply font-medium;
   @apply border;
   @apply border-gray-400;
-  @apply rounded-lg;
-  @apply py-1;
-  @apply px-5;
+  @apply rounded-md;
   @apply shadow-lg;
+  @apply w-28;
+  @apply py-1;
   @apply hover:bg-gray-300;
   @apply hover:shadow-none;
-}
-
-.spo-pagination > .spo-pagination-nav > .spo-pagination-prev > p {
-  @apply text-lg;
-  @apply ml-3;
-}
-
-.spo-pagination > .spo-pagination-nav > .spo-pagination-next > p {
-  @apply text-lg;
-  @apply mr-3;
 }

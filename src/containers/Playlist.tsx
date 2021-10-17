@@ -406,16 +406,14 @@ export function Playlist() {
                   className={`spo-pagination-prev ${playlistState.playlist.previous ? "" : "sr-only"}`}
                   onClick={() => fetchPlaylist(playlistState.playlist.previous)}
                 >
-                  <FontAwesomeIcon icon={["fas", "arrow-left"]} size="lg" color="#4B5563" />
-                  <p>Previous</p>
+                  Previous
                 </button>
 
                 <button
                   className={`spo-pagination-next ${playlistState.playlist.next ? "" : "sr-only"}`}
                   onClick={() => fetchPlaylist(playlistState.playlist.next)}
                 >
-                  <p>Next</p>
-                  <FontAwesomeIcon icon={["fas", "arrow-right"]} size="lg" color="#4B5563" />
+                  Next
                 </button>
               </div>
             </div>
