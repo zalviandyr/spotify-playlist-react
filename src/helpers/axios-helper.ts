@@ -15,6 +15,9 @@ export class AxiosHelper {
 
         if (curTimestamp > parseInt(expireTimestamp!)) {
           sessionStorage.clear();
+
+          // force reload home page and clear histories
+          window.location.replace([window.location.protocol, "//", window.location.host].join(""));
         } else {
           const response = await axios.get(url, { headers });
           data = response.data;
@@ -46,6 +49,9 @@ export class AxiosHelper {
 
         if (curTimestamp > parseInt(expireTimestamp!)) {
           sessionStorage.clear();
+
+          // force reload home page and clear histories
+          window.location.replace([window.location.protocol, "//", window.location.host].join(""));
         } else {
           const response = await axios.post(url, body, { headers });
           data = response.data;
