@@ -89,10 +89,27 @@
 
 .spo-pagination {
   @apply grid;
-  @apply grid-flow-col;
+  @apply grid-cols-2;
+  @apply mt-7;
 }
 
-.spo-pagination > button {
+.spo-pagination > p {
+  @apply text-sm;
+  @apply place-self-start;
+}
+
+.spo-pagination > p > span {
+  @apply font-medium;
+}
+
+.spo-pagination > .spo-pagination-nav {
+  @apply grid;
+  @apply grid-flow-col;
+  @apply gap-x-3;
+  @apply place-content-end;
+}
+
+.spo-pagination > .spo-pagination-nav > button {
   @apply flex;
   @apply flex-row;
   @apply w-36;
@@ -108,20 +125,12 @@
   @apply hover:shadow-none;
 }
 
-.spo-pagination-prev {
-  @apply justify-self-start;
-}
-
-.spo-pagination-next {
-  @apply justify-self-end;
-}
-
-.spo-pagination-prev > p {
+.spo-pagination > .spo-pagination-nav > .spo-pagination-prev > p {
   @apply text-lg;
   @apply ml-3;
 }
 
-.spo-pagination-next > p {
+.spo-pagination > .spo-pagination-nav > .spo-pagination-next > p {
   @apply text-lg;
   @apply mr-3;
 }

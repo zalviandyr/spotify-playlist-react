@@ -1,12 +1,23 @@
 export class PlaylistModel {
   readonly items: Array<PlaylistItem>;
+  readonly limit: number;
   readonly offset: number;
+  readonly total: number;
   readonly next?: string;
   readonly previous?: string;
 
-  constructor(items: Array<PlaylistItem>, offset: number, next?: string, previous?: string) {
+  constructor(
+    items: Array<PlaylistItem>,
+    limit: number,
+    offset: number,
+    total: number,
+    next?: string,
+    previous?: string
+  ) {
     this.items = items;
+    this.limit = limit;
     this.offset = offset;
+    this.total = total;
     this.next = next;
     this.previous = previous;
   }
@@ -14,7 +25,9 @@ export class PlaylistModel {
   static fromJson(json: any): PlaylistModel {
     return new PlaylistModel(
       PlaylistItem.fromJsonToArray(json["items"]),
+      json["limit"],
       json["offset"],
+      json["total"],
       json["next"],
       json["previous"]
     );

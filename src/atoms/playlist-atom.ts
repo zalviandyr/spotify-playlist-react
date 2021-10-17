@@ -12,7 +12,7 @@ export interface PlaylistState {
 export const playlistAtom = atom<PlaylistState>({
   key: "playlistAtom",
   default: {
-    playlist: new PlaylistModel([], 0),
+    playlist: new PlaylistModel([], 0, 0, 0),
     convertProcess: [],
     importProcess: [],
     isFetching: true,

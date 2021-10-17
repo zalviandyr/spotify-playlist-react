@@ -400,22 +400,31 @@ export function Playlist() {
               </table>
             </div>
 
-            <div className="spo-pagination mt-7">
-              <button
-                className={`spo-pagination-prev ${playlistState.playlist.previous ? "" : "sr-only"}`}
-                onClick={() => fetchPlaylist(playlistState.playlist.previous)}
-              >
-                <FontAwesomeIcon icon={["fas", "arrow-left"]} size="lg" color="#4B5563" />
-                <p>Previous</p>
-              </button>
+            <div className="spo-pagination">
+              <p>
+                Showing <span>{playlistState.playlist.offset + 1} </span>to
+                <span> {playlistState.playlist.offset + playlistState.playlist.items.length} </span>
+                of
+                <span> {playlistState.playlist.total} </span>results
+              </p>
 
-              <button
-                className={`spo-pagination-next ${playlistState.playlist.next ? "" : "sr-only"}`}
-                onClick={() => fetchPlaylist(playlistState.playlist.next)}
-              >
-                <p>Next</p>
-                <FontAwesomeIcon icon={["fas", "arrow-right"]} size="lg" color="#4B5563" />
-              </button>
+              <div className="spo-pagination-nav">
+                <button
+                  className={`spo-pagination-prev ${playlistState.playlist.previous ? "" : "sr-only"}`}
+                  onClick={() => fetchPlaylist(playlistState.playlist.previous)}
+                >
+                  <FontAwesomeIcon icon={["fas", "arrow-left"]} size="lg" color="#4B5563" />
+                  <p>Previous</p>
+                </button>
+
+                <button
+                  className={`spo-pagination-next ${playlistState.playlist.next ? "" : "sr-only"}`}
+                  onClick={() => fetchPlaylist(playlistState.playlist.next)}
+                >
+                  <p>Next</p>
+                  <FontAwesomeIcon icon={["fas", "arrow-right"]} size="lg" color="#4B5563" />
+                </button>
+              </div>
             </div>
           </div>
 
