@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
 import { format, parse } from "fast-csv";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
-import { PlaylistModel, PlaylistItem } from "../../models";
+import { PlaylistModel, PlaylistItem, CreatePlaylistModel } from "../../models";
 import { AxiosHelper } from "../../helpers/axios-helper";
 import { Track, TrackModel } from "../../models/TrackModel";
 import { CreatePlaylistModal } from "../../components";
@@ -110,7 +110,7 @@ export function Playlist() {
     }
   }
 
-  async function createPlaylistSubmit(data: { name: string; description: string; isPublic: boolean }) {
+  async function createPlaylistSubmit(data: CreatePlaylistModel) {
     try {
       const profileData = await AxiosHelper.get("https://api.spotify.com/v1/me");
       const id = profileData.id;
@@ -118,6 +118,7 @@ export function Playlist() {
         name: data.name,
         description: data.description,
         public: data.isPublic ? "true" : "false",
+        collaborative: data.isCollaborative ? "true" : "false",
       };
       await AxiosHelper.post(`https://api.spotify.com/v1/users/${id}/playlists`, body);
 

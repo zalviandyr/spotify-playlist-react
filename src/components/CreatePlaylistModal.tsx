@@ -1,16 +1,18 @@
 import React, { Fragment, SyntheticEvent } from "react";
 import { Dialog, Switch, Transition } from "@headlessui/react";
 import { capitalize } from "../helpers/string-helper";
+import { CreatePlaylistModel } from "../models";
 
 interface CreatePlaylistModalProps {
   isModalCreateOpen: boolean;
-  onSubmitForm: (data: { name: string; description: string; isPublic: boolean }) => void;
+  onSubmitForm: (data: CreatePlaylistModel) => void;
   onClose: () => void;
 }
 
 interface CreatePlaylistModalState {
   errors: any;
   isPublic: boolean;
+  isCollaborative: boolean;
 }
 
 export class CreatePlaylistModal extends React.Component<CreatePlaylistModalProps, CreatePlaylistModalState> {
@@ -20,6 +22,7 @@ export class CreatePlaylistModal extends React.Component<CreatePlaylistModalProp
     this.state = {
       errors: {},
       isPublic: true,
+      isCollaborative: false,
     };
   }
 
@@ -43,19 +46,26 @@ export class CreatePlaylistModal extends React.Component<CreatePlaylistModalProp
     if (keys.length === 0) {
       this.props.onClose();
 
-      const data = {
+      this.props.onSubmitForm({
         name: target["name"].value,
         description: target["description"].value,
         isPublic: this.state.isPublic,
-      };
-
-      this.props.onSubmitForm(data);
+        isCollaborative: this.state.isCollaborative,
+      });
     }
   }
 
   publicSwitchAction() {
     this.setState((prevState) => ({
       isPublic: !prevState.isPublic,
+      isCollaborative: !prevState.isPublic ? false : prevState.isCollaborative,
+    }));
+  }
+
+  collaborativeSwitchAction() {
+    this.setState((prevState) => ({
+      isPublic: !prevState.isCollaborative ? false : prevState.isPublic,
+      isCollaborative: !prevState.isCollaborative,
     }));
   }
 
@@ -119,10 +129,28 @@ export class CreatePlaylistModal extends React.Component<CreatePlaylistModalProp
                         this.state.isPublic ? "bg-blue-600" : "bg-gray-600"
                       } relative inline-flex items-center h-6 rounded-full w-11 mt-3 transition-colors ease-in-out duration-200`}
                     >
-                      <span className="sr-only">Enable notifications</span>
                       <span
                         className={`${
                           this.state.isPublic ? "translate-x-6" : "translate-x-1"
+                        } inline-block w-4 h-4 transform bg-white rounded-full transition ease-in-out duration-200`}
+                      />
+                    </Switch>
+                  </div>
+
+                  <div className="spo-form-control flex justify-between">
+                    <label htmlFor="playlist-public">Is collaborative playlist ? </label>
+
+                    <Switch
+                      as="button"
+                      checked={this.state.isCollaborative}
+                      onChange={() => this.collaborativeSwitchAction()}
+                      className={`${
+                        this.state.isCollaborative ? "bg-blue-600" : "bg-gray-600"
+                      } relative inline-flex items-center h-6 rounded-full w-11 mt-3 transition-colors ease-in-out duration-200`}
+                    >
+                      <span
+                        className={`${
+                          this.state.isCollaborative ? "translate-x-6" : "translate-x-1"
                         } inline-block w-4 h-4 transform bg-white rounded-full transition ease-in-out duration-200`}
                       />
                     </Switch>
