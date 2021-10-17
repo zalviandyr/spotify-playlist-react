@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
 import { format, parse } from "fast-csv";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
-import { PlaylistModel } from "../../models";
+import { PlaylistModel, PlaylistItem } from "../../models";
 import { AxiosHelper } from "../../helpers/axios-helper";
 import { Track, TrackModel } from "../../models/TrackModel";
 import { CreatePlaylistModal } from "../../components";
@@ -66,7 +66,7 @@ export function Playlist() {
     }));
   }
 
-  async function fetchPlaylist() {
+  async function fetchPlaylist(url: string = "https://api.spotify.com/v1/me/playlists") {
     setPlaylistState((curVal) => ({
       ...curVal,
       isFetching: true,
@@ -74,22 +74,22 @@ export function Playlist() {
 
     // get playlist
     try {
-      const data = await AxiosHelper.get("https://api.spotify.com/v1/me/playlists");
-      const playlists = PlaylistModel.fromJsonToArray(data);
+      const data = await AxiosHelper.get(url);
+      const playlist = PlaylistModel.fromJson(data);
 
       if (playlistState.convertProcess.length === 0 || playlistState.importProcess.length === 0) {
         setPlaylistState((curVal) => ({
           ...curVal,
           // generate array base on playlist length, fill with false value
-          convertProcess: Array.from({ length: playlists.length }, () => ({ progress: 0, isProcess: false })),
+          convertProcess: Array.from({ length: playlist.items.length }, () => ({ progress: 0, isProcess: false })),
           // generate array base on playlist length, fill with false value
-          importProcess: Array.from({ length: playlists.length }, () => ({ progress: 0, isProcess: false })),
+          importProcess: Array.from({ length: playlist.items.length }, () => ({ progress: 0, isProcess: false })),
         }));
       }
 
       setPlaylistState((curVal) => ({
         ...curVal,
-        playlists: playlists,
+        playlist: playlist,
         isFetching: false,
       }));
     } catch (err) {
@@ -138,7 +138,7 @@ export function Playlist() {
     }
   }
 
-  async function exportAction(playlist: PlaylistModel, index: number) {
+  async function exportAction(playlist: PlaylistItem, index: number) {
     setConvertProcessLoading(index, 0, true);
 
     // init next
@@ -217,8 +217,9 @@ export function Playlist() {
     setConvertProcessLoading(index, 0, false);
   }
 
-  function importAction(playlist: PlaylistModel, index: number, event: SyntheticEvent) {
+  function importAction(playlist: PlaylistItem, index: number, event: SyntheticEvent) {
     const files = (event.target as any).files;
+
     if (files.length > 0) {
       setImportProcessLoading(index, 0, true);
 
@@ -313,9 +314,9 @@ export function Playlist() {
                   </tr>
                 </thead>
                 <tbody>
-                  {playlistState.playlists.map((val, index) => (
+                  {playlistState.playlist.items.map((val, index) => (
                     <tr key={val.id}>
-                      <td>{index + 1}</td>
+                      <td>{playlistState.playlist.offset + (index + 1)}</td>
                       <td>{val.name}</td>
                       <td>{val.owner}</td>
                       <td>{val.tracks}</td>
@@ -396,6 +397,24 @@ export function Playlist() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            <div className="spo-pagination mt-7">
+              <button
+                className={`spo-pagination-prev ${playlistState.playlist.previous ? "" : "sr-only"}`}
+                onClick={() => fetchPlaylist(playlistState.playlist.previous)}
+              >
+                <FontAwesomeIcon icon={["fas", "arrow-left"]} size="lg" color="#4B5563" />
+                <p>Previous</p>
+              </button>
+
+              <button
+                className={`spo-pagination-next ${playlistState.playlist.next ? "" : "sr-only"}`}
+                onClick={() => fetchPlaylist(playlistState.playlist.next)}
+              >
+                <p>Next</p>
+                <FontAwesomeIcon icon={["fas", "arrow-right"]} size="lg" color="#4B5563" />
+              </button>
             </div>
           </div>
 

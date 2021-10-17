@@ -1,4 +1,27 @@
 export class PlaylistModel {
+  readonly items: Array<PlaylistItem>;
+  readonly offset: number;
+  readonly next?: string;
+  readonly previous?: string;
+
+  constructor(items: Array<PlaylistItem>, offset: number, next?: string, previous?: string) {
+    this.items = items;
+    this.offset = offset;
+    this.next = next;
+    this.previous = previous;
+  }
+
+  static fromJson(json: any): PlaylistModel {
+    return new PlaylistModel(
+      PlaylistItem.fromJsonToArray(json["items"]),
+      json["offset"],
+      json["next"],
+      json["previous"]
+    );
+  }
+}
+
+export class PlaylistItem {
   readonly id: string;
   readonly isCollaborative: boolean;
   readonly isPublic: boolean;
@@ -28,8 +51,8 @@ export class PlaylistModel {
     this.tracks = tracks;
   }
 
-  static fromJson(json: any): PlaylistModel {
-    return new PlaylistModel(
+  static fromJson(json: any): PlaylistItem {
+    return new PlaylistItem(
       json["id"],
       json["collaborative"],
       json["public"],
@@ -41,13 +64,13 @@ export class PlaylistModel {
     );
   }
 
-  static fromJsonToArray(json: any): Array<PlaylistModel> {
-    const playlists: Array<PlaylistModel> = [];
-    for (let i = 0; i < json["items"].length; i++) {
-      const item = json["items"][i];
+  static fromJsonToArray(json: any): Array<PlaylistItem> {
+    const playlists: Array<PlaylistItem> = [];
+    for (let i = 0; i < json.length; i++) {
+      const item = json[i];
 
       playlists.push(
-        new PlaylistModel(
+        new PlaylistItem(
           item["id"],
           item["collaborative"],
           item["public"],

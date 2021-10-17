@@ -2,7 +2,7 @@ import { PlaylistModel } from "../models";
 import { atom } from "recoil";
 
 export interface PlaylistState {
-  playlists: Array<PlaylistModel>;
+  playlist: PlaylistModel;
   convertProcess: Array<{ progress: number; isProcess: boolean }>;
   importProcess: Array<{ progress: number; isProcess: boolean }>;
   isFetching: boolean;
@@ -12,7 +12,7 @@ export interface PlaylistState {
 export const playlistAtom = atom<PlaylistState>({
   key: "playlistAtom",
   default: {
-    playlists: [],
+    playlist: new PlaylistModel([], 0),
     convertProcess: [],
     importProcess: [],
     isFetching: true,

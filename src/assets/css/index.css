@@ -86,3 +86,42 @@
   @apply py-4;
   @apply text-sm;
 }
+
+.spo-pagination {
+  @apply grid;
+  @apply grid-flow-col;
+}
+
+.spo-pagination > button {
+  @apply flex;
+  @apply flex-row;
+  @apply w-36;
+  @apply justify-between;
+  @apply items-center;
+  @apply border;
+  @apply border-gray-400;
+  @apply rounded-lg;
+  @apply py-1;
+  @apply px-5;
+  @apply shadow-lg;
+  @apply hover:bg-gray-300;
+  @apply hover:shadow-none;
+}
+
+.spo-pagination-prev {
+  @apply justify-self-start;
+}
+
+.spo-pagination-next {
+  @apply justify-self-end;
+}
+
+.spo-pagination-prev > p {
+  @apply text-lg;
+  @apply ml-3;
+}
+
+.spo-pagination-next > p {
+  @apply text-lg;
+  @apply mr-3;
+}

@@ -61,12 +61,6 @@ export function Home() {
           ) : (
             <div className="flex justify-center">
               <button className="spo-btn flex items-center flex-none" onClick={getStartedAction}>
-                {/* <button
-                className="spo-btn flex items-center flex-none"
-                onClick={() => {
-                  setHomeState({ accessToken: "assd" });
-                }}
-              > */}
                 <FontAwesomeIcon icon={["fab", "spotify"]} size="2x" className="mr-2" />
                 Get started
               </button>

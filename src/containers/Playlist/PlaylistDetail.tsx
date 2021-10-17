@@ -1,11 +1,11 @@
 import React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import { AxiosHelper } from "../../helpers/axios-helper";
-import { PlaylistModel, TrackModel } from "../../models";
+import { PlaylistItem, TrackModel } from "../../models";
 
 interface PlaylistDetailState {
   playlistId: string;
-  playlist: PlaylistModel | null;
+  playlist: PlaylistItem | null;
 }
 
 class PlaylistDetail extends React.Component<RouteComponentProps, PlaylistDetailState> {
@@ -26,7 +26,7 @@ class PlaylistDetail extends React.Component<RouteComponentProps, PlaylistDetail
     const tracksData = await AxiosHelper.get(
       `https://api.spotify.com/v1/playlists/${this.state.playlistId}/tracks?offset=0&limit=100`
     );
-    this.setState({ playlist: PlaylistModel.fromJson(playlistData) });
+    this.setState({ playlist: PlaylistItem.fromJson(playlistData) });
     const track = TrackModel.fromJson(tracksData);
     console.log(track);
   }
