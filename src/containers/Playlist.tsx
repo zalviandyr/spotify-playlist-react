@@ -3,14 +3,13 @@ import blobStream from "blob-stream";
 import ReactLoading from "react-loading";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Link } from "react-router-dom";
 import { format, parse } from "fast-csv";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
-import { PlaylistModel, PlaylistItem, CreatePlaylistModel } from "../../models";
-import { AxiosHelper } from "../../helpers/axios-helper";
-import { Track, TrackModel } from "../../models/TrackModel";
-import { CreatePlaylistModal } from "../../components";
-import { playlistAtom, notificationAtom } from "../../atoms";
+import { PlaylistModel, PlaylistItem, CreatePlaylistModel } from "../models";
+import { AxiosHelper } from "../helpers/axios-helper";
+import { Track, TrackModel } from "../models/TrackModel";
+import { CreatePlaylistModal } from "../components";
+import { playlistAtom, notificationAtom } from "../atoms";
 import "react-circular-progressbar/dist/styles.css";
 
 export function Playlist() {
@@ -309,7 +308,6 @@ export function Playlist() {
                     <th>Track</th>
                     <th>Collaborative</th>
                     <th>Public</th>
-                    <th className="text-center">Edit</th>
                     <th className="text-center">Export</th>
                     <th className="text-center">Import</th>
                   </tr>
@@ -334,11 +332,6 @@ export function Playlist() {
                         ) : (
                           <span />
                         )}
-                      </td>
-                      <td className="text-center">
-                        <Link to={`/${val.id}`}>
-                          <FontAwesomeIcon icon={["fas", "edit"]} size="lg" className="text-blue-400" />
-                        </Link>
                       </td>
                       <td className="text-center">
                         {playlistState.convertProcess[index].isProcess ? (
