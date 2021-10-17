@@ -61,13 +61,4 @@ export class AxiosHelper {
 
     return data;
   }
-
-  private static toJson(body: URLSearchParams) {
-    const bodyJson: any = {};
-    body.forEach((val, key) => {
-      bodyJson[key] = val;
-    });
-
-    return bodyJson;
-  }
 }

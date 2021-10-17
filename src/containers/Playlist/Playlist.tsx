@@ -10,6 +10,8 @@ import { Track, TrackModel } from "../../models/TrackModel";
 import { CreatePlaylistModal } from "../../components";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import { playlistAtom, notificationAtom } from "../../atoms";
+import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
 
 export function Playlist() {
   const setNotificationState = useSetRecoilState(notificationAtom);
@@ -23,29 +25,28 @@ export function Playlist() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function setConvertProcessLoading(index: number, isLoading: boolean) {
+  function setConvertProcessLoading(index: number, progress: number, isLoading: boolean) {
     setPlaylistState((curVal) => ({
       ...curVal,
-      isConvertProcess: curVal.isConvertProcess.map((_, i) => {
+      convertProcess: curVal.convertProcess.map((_, i) => {
         if (i === index) {
-          return isLoading;
+          return { progress: Math.round(progress), isProcess: isLoading };
         } else {
-          // prev status
-          return curVal.isConvertProcess[i];
+          return curVal.convertProcess[i];
         }
       }),
     }));
   }
 
-  function setImportProcessLoading(index: number, isLoading: boolean) {
+  function setImportProcessLoading(index: number, progress: number, isLoading: boolean) {
     setPlaylistState((curVal) => ({
       ...curVal,
-      isImportProcess: curVal.isImportProcess.map((_, i) => {
+      importProcess: curVal.importProcess.map((_, i) => {
         if (i === index) {
-          return isLoading;
+          return { progress: Math.round(progress), isProcess: isLoading };
         } else {
           // prev status
-          return curVal.isImportProcess[i];
+          return curVal.importProcess[i];
         }
       }),
     }));
@@ -76,13 +77,13 @@ export function Playlist() {
       const data = await AxiosHelper.get("https://api.spotify.com/v1/me/playlists");
       const playlists = PlaylistModel.fromJsonToArray(data);
 
-      if (playlistState.isConvertProcess.length === 0 || playlistState.isImportProcess.length === 0) {
+      if (playlistState.convertProcess.length === 0 || playlistState.importProcess.length === 0) {
         setPlaylistState((curVal) => ({
           ...curVal,
           // generate array base on playlist length, fill with false value
-          isConvertProcess: Array.from({ length: playlists.length }, () => false),
+          convertProcess: Array.from({ length: playlists.length }, () => ({ progress: 0, isProcess: false })),
           // generate array base on playlist length, fill with false value
-          isImportProcess: Array.from({ length: playlists.length }, () => false),
+          importProcess: Array.from({ length: playlists.length }, () => ({ progress: 0, isProcess: false })),
         }));
       }
 
@@ -138,13 +139,14 @@ export function Playlist() {
   }
 
   async function exportAction(playlist: PlaylistModel, index: number) {
-    setConvertProcessLoading(index, true);
+    setConvertProcessLoading(index, 0, true);
 
     // init next
     let isNext = true;
     const fullTracks: Array<Track> = [];
     // fetch until next url null
     let urlTrack = `https://api.spotify.com/v1/playlists/${playlist.id}/tracks?offset=0&limit=100`;
+    let trackCounter = 0;
     while (isNext) {
       // fetch tracks from playlist
       const data = await AxiosHelper.get(urlTrack);
@@ -152,6 +154,7 @@ export function Playlist() {
 
       // set genre
       for (let i = 0; i < track.tracks.length; i++) {
+        trackCounter += 1;
         const item = track.tracks[i];
         const genresTrack: Array<string> = [];
         // get genre from artist
@@ -170,6 +173,9 @@ export function Playlist() {
         } else {
           urlTrack = track.next;
         }
+
+        const progress = (trackCounter / playlist.tracks) * 100;
+        setConvertProcessLoading(index, progress, true);
       }
 
       // push to full track
@@ -208,18 +214,18 @@ export function Playlist() {
     link.setAttribute("download", `${playlist.name}.csv`);
     link.click();
 
-    setConvertProcessLoading(index, false);
+    setConvertProcessLoading(index, 0, false);
   }
 
   function importAction(playlist: PlaylistModel, index: number, event: SyntheticEvent) {
     const files = (event.target as any).files;
     if (files.length > 0) {
-      setImportProcessLoading(index, true);
+      setImportProcessLoading(index, 0, true);
 
       const file: File = files[0];
       const reader: FileReader = new FileReader();
       const uris: string[] = [];
-      const urisLength = uris.length;
+      let urisLength = 0;
 
       reader.readAsText(file);
       reader.onload = (e) => {
@@ -231,15 +237,22 @@ export function Playlist() {
               message: "Failed parsing to CSV",
             });
 
-            setImportProcessLoading(index, false);
+            setImportProcessLoading(index, 0, false);
           })
           .on("data", (row) => uris.push(row["Uri"]))
           .on("end", async () => {
             try {
+              urisLength = uris.length;
+              let trackCounter = 0;
               while (true) {
                 const urisOffset = uris.splice(0, 100);
+                trackCounter += urisOffset.length;
+
                 const body = { uris: urisOffset };
                 await AxiosHelper.post(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, body);
+
+                const progress = (trackCounter / urisLength) * 100;
+                setImportProcessLoading(index, progress, true);
 
                 if (uris.length === 0) {
                   break;
@@ -260,7 +273,7 @@ export function Playlist() {
                 message: "Failed import playlist",
               });
             } finally {
-              setImportProcessLoading(index, false);
+              setImportProcessLoading(index, 0, false);
             }
           });
 
@@ -326,28 +339,48 @@ export function Playlist() {
                         </Link>
                       </td>
                       <td className="text-center">
-                        {playlistState.isConvertProcess[index] ? (
-                          <ReactLoading type="spin" color="#34D399" height="50%" width="50%" className="inline-block" />
+                        {playlistState.convertProcess[index].isProcess ? (
+                          <div className="w-9 h-9 inline-block">
+                            <CircularProgressbar
+                              value={playlistState.convertProcess[index].progress}
+                              text={`${playlistState.convertProcess[index].progress}%`}
+                              styles={buildStyles({
+                                textSize: "35px",
+                                textColor: "#34D399",
+                                pathColor: "#34D399",
+                              })}
+                            />
+                          </div>
                         ) : (
                           <FontAwesomeIcon
                             icon={["fas", "download"]}
                             size="lg"
-                            className="text-green-400 cursor-pointer"
+                            className="text-green-400 cursor-pointer w-9 h-9"
                             onClick={() => exportAction(val, index)}
                           />
                         )}
                       </td>
 
                       <td className="text-center">
-                        {playlistState.isImportProcess[index] ? (
-                          <ReactLoading type="spin" color="#4F46E5" height="50%" width="50%" className="inline-block" />
+                        {playlistState.importProcess[index].isProcess ? (
+                          <div className="w-9 h-9 inline-block">
+                            <CircularProgressbar
+                              value={playlistState.importProcess[index].progress}
+                              text={`${playlistState.importProcess[index].progress}%`}
+                              styles={buildStyles({
+                                textSize: "35px",
+                                textColor: "#4F46E5",
+                                pathColor: "#4F46E5",
+                              })}
+                            />
+                          </div>
                         ) : (
                           <>
                             <label htmlFor="csvFile">
                               <FontAwesomeIcon
                                 icon={["fas", "upload"]}
                                 size="lg"
-                                className="text-indigo-600 cursor-pointer"
+                                className="text-indigo-600 cursor-pointer w-9 h-9"
                               />
                             </label>
                             <input
